@@ -13,16 +13,16 @@ namespace clench {
         return false;
       return true; // TODO: Actually compare the two
     }
-    std::string Val::ToString() const {
+    const char *Val::ToString() const {
       switch (type) {
       case Proptype::Bool:
         return val_bool ? "True" : "False";
       case Proptype::Int:
-        return std::to_string(val_int);
+        return std::to_string(val_int).c_str();
       case Proptype::Float:
-        return std::to_string(val_float);
+        return std::to_string(val_float).c_str();
       case Proptype::String:
-        return val_string;
+        return val_string.c_str();
       }
       throw std::exception("somehow a val got corrupted");
     }
@@ -61,8 +61,10 @@ namespace clench {
 
     // COMPDEF //
     Compdef::Compdef() {}
-    Compdef::Compdef(std::string name_, std::list<Propdef> propdefs_) : name(name_), propdefs(propdefs_) {}
-    Compdef *Compdef::Define(std::string name, std::list<Propdef> propdefs) {
+    Compdef::~Compdef() {}
+    void Compdef::Cleanup() {}
+    Compdef::Compdef(const char *name_, std::list<Propdef> propdefs_) : name(name_), propdefs(propdefs_) {}
+    Compdef *Compdef::Define(const char *name, std::list<Propdef> propdefs) {
       app.compdefs.insert({ name, Compdef(name, propdefs) });
       return &(app.compdefs[name]);
     }
@@ -98,7 +100,7 @@ namespace clench {
       return elem;
     }
 
-    Elem *Elem::Append(std::string name) {
+    Elem *Elem::Append(const char *name) {
       Elem *elem = new Elem();
       elem->parent = this;
       elem->name = name;
@@ -127,6 +129,11 @@ namespace clench {
       }
       comps.insert({ compdef->name, comp });
       return comp;
+    }
+
+    Comp *Elem::Attach(const char *compdefName) {
+      //Compdef *compdef = app.compdefs.find(compdefName);
+      return nullptr;
     }
 
     Elem *Elem::CloneTo(Elem *dest) const {
@@ -184,21 +191,21 @@ namespace clench {
       return "TODO";
     }
 
-    Comp *Elem::GetComp(const std::string &compName) {
+    Comp *Elem::GetComp(const char *compName) {
       auto comp = comps.find(compName);
       if (comp != comps.end())
         return comp->second;
       return nullptr;
     }
 
-    Comp &Elem::operator[](const std::string &compName) {
+    Comp &Elem::operator[](const char *compName) {
       Comp *comp = GetComp(compName);
       if (!comp)
         throw std::exception("comp not found in elem");
       return *comp;
     }
 
-    Comp *Elem::GetRel(const std::string &compName) {
+    Comp *Elem::GetRel(const char *compName) {
       Comp *comp = GetComp(compName);
       if (!comp && parent) {
         comp = parent->GetRel(compName);
@@ -246,7 +253,7 @@ namespace clench {
         SDL_RenderClear(renderer);
 
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
-        SDL_RenderDrawLine(renderer, 0, 0, 100, 100);
+        SDL_RenderDrawLine(renderer, 32, 32, 128, 128);
 
         SDL_RenderPresent(renderer);
       }
@@ -254,6 +261,10 @@ namespace clench {
       SDL_DestroyRenderer(renderer);
       SDL_DestroyWindow(window);
       SDL_Quit();
+    }
+
+    void App::Tick(float dt) {
+      
     }
 
   }

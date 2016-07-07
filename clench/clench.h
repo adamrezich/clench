@@ -25,6 +25,7 @@ CLENCH_API void test(void);
 #include <list>
 #include <string>
 #include <unordered_map>
+#include "mem.h"
 
 struct SDL_Window;
 struct SDL_Renderer;
@@ -54,7 +55,7 @@ namespace clench {
       };
       std::string val_string;
 
-      std::string ToString() const;
+      const char *ToString() const;
 
       bool operator==(const Val &rhs) const;
       static Val Bool(bool value);
@@ -64,7 +65,7 @@ namespace clench {
     };
 
     struct CLENCH_API Propdef {
-      std::string name;
+      const char *name;
       Val default;
       Propdef(const char *name_, Val default_);
     };
@@ -86,16 +87,18 @@ namespace clench {
 
     struct Elem;
 
-    struct CLENCH_API Compdef {
-      std::string name;
+    struct CLENCH_API Compdef : clench::mem::Managed<Compdef, 1024> {
+      const char *name;
       std::list<Propdef> propdefs;
 
-      static Compdef *Define(std::string name, std::list<Propdef> propdefs);
+      static Compdef *Define(const char *name, std::list<Propdef> propdefs);
 
       Compdef();
+      ~Compdef();
+      void Cleanup();
 
     private:
-      Compdef(std::string name_, std::list<Propdef> propdefs_);
+      Compdef(const char *name_, std::list<Propdef> propdefs_);
     };
 
     struct CLENCH_API Comp {
@@ -120,13 +123,14 @@ namespace clench {
       std::unordered_map<std::string, Comp *> comps;
 
       Elem *Append();
-      Elem *Append(std::string name);
+      Elem *Append(const char *name);
       Elem *Append(Elem *elem);
 
       Comp *Attach(Compdef *compdef);
       Comp *Attach(Compdef *compdef, std::unordered_map<std::string, Val> propvals);
+      Comp *Attach(const char *compdefName);
 
-      Comp *GetComp(const std::string &compName);
+      Comp *GetComp(const char *compName);
 
       Elem *CloneTo(Elem *elem) const;
 
@@ -136,16 +140,16 @@ namespace clench {
 
       std::string GetPath();
 
-      Comp &operator[](const std::string &compName);
+      Comp &operator[](const char *compName);
 
 
-      Comp *GetRel(const std::string &compName);
+      Comp *GetRel(const char *compName);
 
     };
 
     struct CLENCH_API Pkg {
-      friend class Compdef;
-      friend class Elem;
+      friend struct Compdef;
+      friend struct Elem;
       Pkg();
 
     protected:
@@ -162,6 +166,9 @@ namespace clench {
       void BeginInit();
       void EndInit();
       void Begin();
+
+    private:
+      void Tick(float dt);
     };
 
   }
