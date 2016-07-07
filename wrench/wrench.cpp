@@ -8,7 +8,7 @@
 
 int main() {
 
-  std::cout << fnclench() << std::endl;
+  test();
 
   std::cin.get();
 

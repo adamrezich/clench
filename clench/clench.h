@@ -19,4 +19,4 @@ public:
 
 extern CLENCH_API int nclench;
 
-CLENCH_API int fnclench(void);
+CLENCH_API void test(void);
