@@ -8,9 +8,11 @@
 
 int main() {
 
-  test();
+  using namespace clench;
 
-  std::cin.get();
+  app.BeginInit();
+  app.EndInit();
+  app.Begin();
 
   return 0;
 }

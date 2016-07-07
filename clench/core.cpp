@@ -1,16 +1,17 @@
 #include "stdafx.h"
-#include "core.h"
+#include "clench.h"
 #include <iostream>
+#include <SDL.h>
 
 namespace clench {
 
   namespace core {
 
-    // VALUE //
+    // VAL //
     bool Val::operator==(const Val &rhs) const {
       if (type != rhs.type)
         return false;
-      return true; // FIXME
+      return true; // TODO: Actually compare the two
     }
     std::string Val::ToString() const {
       switch (type) {
@@ -43,12 +44,15 @@ namespace clench {
       val.val_float = value;
       return val;
     }
-    Val Val::String(const std::string &value) {
+    Val Val::String(const char *value) {
       Val val;
       val.type = Proptype::String;
       val.val_string = value;
       return val;
     }
+
+    // PROPDEF //
+    Propdef::Propdef(const char *name_, Val default_) : name(name_), default(default_) {}
 
     // PROP //
     bool Prop::IsDefault() const {
@@ -56,6 +60,8 @@ namespace clench {
     }
 
     // COMPDEF //
+    Compdef::Compdef() {}
+    Compdef::Compdef(std::string name_, std::list<Propdef> propdefs_) : name(name_), propdefs(propdefs_) {}
     Compdef *Compdef::Define(std::string name, std::list<Propdef> propdefs) {
       app.compdefs.insert({ name, Compdef(name, propdefs) });
       return &(app.compdefs[name]);
@@ -200,8 +206,58 @@ namespace clench {
       return comp;
     }
 
-  }
+    // PKG //
+    Pkg::Pkg() {
+      compdefs.reserve(128);
+      elemdefs.reserve(128);
+    }
 
-  core::App app;
+    // APP //
+    App::App() {
+      root.parent = nullptr;
+      root.name = "_root";
+      compdefs.reserve(512);
+      elemdefs.reserve(512);
+    }
+
+    void App::BeginInit() {
+      std::cout << "Beginning init..." << std::endl;
+    }
+
+    void App::EndInit() {
+      std::cout << "Init ended." << std::endl;
+    }
+
+    void App::Begin() {
+      SDL_Init(SDL_INIT_VIDEO);
+
+      window = SDL_CreateWindow("clench", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, 0);
+      renderer = SDL_CreateRenderer(window, -1, 0);
+
+      while (1) {
+        SDL_Event e;
+        if (SDL_PollEvent(&e)) {
+          if (e.type == SDL_QUIT) {
+            break;
+          }
+        }
+
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+        SDL_RenderClear(renderer);
+
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, SDL_ALPHA_OPAQUE);
+        SDL_RenderDrawLine(renderer, 0, 0, 100, 100);
+
+        SDL_RenderPresent(renderer);
+      }
+
+      SDL_DestroyRenderer(renderer);
+      SDL_DestroyWindow(window);
+      SDL_Quit();
+    }
+
+  }
+  // CORE //
+  CLENCH_API core::App app;
 
 }
